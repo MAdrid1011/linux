@@ -54,7 +54,11 @@ endif
 # ISA string setting
 riscv-march-$(CONFIG_ARCH_RV32I)	:= rv32ima
 riscv-march-$(CONFIG_ARCH_RV64I)	:= rv64ima
+ifeq ($(CONFIG_RISCV_ISA_F_ONLY),y)
+riscv-march-$(CONFIG_FPU)		:= $(riscv-march-y)f
+else
 riscv-march-$(CONFIG_FPU)		:= $(riscv-march-y)fd
+endif
 riscv-march-$(CONFIG_RISCV_ISA_C)	:= $(riscv-march-y)c
 
 ifdef CONFIG_TOOLCHAIN_NEEDS_OLD_ISA_SPEC
@@ -70,7 +74,11 @@ riscv-march-$(CONFIG_TOOLCHAIN_HAS_ZICBOM) := $(riscv-march-y)_zicbom
 # Check if the toolchain supports Zihintpause extension
 riscv-march-$(CONFIG_TOOLCHAIN_HAS_ZIHINTPAUSE) := $(riscv-march-y)_zihintpause
 
+ifeq ($(CONFIG_RISCV_ISA_F_ONLY),y)
+KBUILD_CFLAGS += -march=$(subst rv32imaf,rv32ima,$(riscv-march-y))
+else
 KBUILD_CFLAGS += -march=$(subst fd,,$(riscv-march-y))
+endif
 KBUILD_AFLAGS += -march=$(riscv-march-y)
 
 KBUILD_CFLAGS += -mno-save-restore
