@@ -37,7 +37,11 @@ struct thread_struct {
 	unsigned long ra;
 	unsigned long sp;	/* Kernel mode stack */
 	unsigned long s[12];	/* s[0]: frame pointer */
+#ifdef CONFIG_RISCV_ISA_F_ONLY
+	struct __riscv_f_ext_state fstate;
+#else
 	struct __riscv_d_ext_state fstate;
+#endif
 	unsigned long bad_cause;
 };
 

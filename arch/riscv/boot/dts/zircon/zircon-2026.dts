@@ -1,0 +1,65 @@
+// SPDX-License-Identifier: GPL-2.0
+/dts-v1/;
+
+/ {
+	#address-cells = <1>;
+	#size-cells = <1>;
+	compatible = "zircon,zircon-2026";
+	model = "Zircon-2026 RV32 simulation platform";
+
+	chosen {
+		bootargs = "console=hvc0 earlycon=sbi rdinit=/init";
+		stdout-path = &uart0;
+	};
+
+	cpus {
+		#address-cells = <1>;
+		#size-cells = <0>;
+		timebase-frequency = <10000000>;
+
+		cpu0: cpu@0 {
+			clock-frequency = <100000000>;
+			compatible = "riscv";
+			device_type = "cpu";
+			mmu-type = "riscv,sv32";
+			reg = <0>;
+			riscv,isa = "rv32imaf_zicsr_zifencei";
+			status = "okay";
+
+			cpu0_intc: interrupt-controller {
+				#interrupt-cells = <1>;
+				compatible = "riscv,cpu-intc";
+				interrupt-controller;
+			};
+		};
+	};
+
+	memory@80000000 {
+		device_type = "memory";
+		reg = <0x80000000 0x04000000>;
+	};
+
+	soc {
+		#address-cells = <1>;
+		#size-cells = <1>;
+		compatible = "simple-bus";
+		ranges;
+
+        mtimer@a000bff8 {
+            compatible = "riscv,aclint-mtimer";
+            interrupts-extended = <&cpu0_intc 7>;
+            reg = <0xa000bff8 0x00000008>,
+                  <0xa0004000 0x00000008>;
+        };
+
+		uart0: serial@a1000000 {
+			clock-frequency = <10000000>;
+			compatible = "ns16550a";
+			current-speed = <115200>;
+			reg = <0xa1000000 0x00001000>;
+			reg-io-width = <1>;
+			reg-shift = <0>;
+			status = "okay";
+		};
+	};
+};

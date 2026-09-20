@@ -41,6 +41,13 @@ config SOC_VIRT
 	help
 	  This enables support for QEMU Virt Machine.
 
+config SOC_ZIRCON
+	bool "Zircon processor simulation platform"
+	help
+	  This enables the single-hart Zircon simulation platform. The first
+	  platform revision uses SBI for console and timer services and boots
+	  from an initramfs without a PLIC or external devices.
+
 config SOC_CANAAN
 	bool "Canaan Kendryte K210 SoC"
 	depends on !MMU

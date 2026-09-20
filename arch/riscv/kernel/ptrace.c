@@ -49,18 +49,30 @@ static int riscv_gpr_set(struct task_struct *target,
 }
 
 #ifdef CONFIG_FPU
+#ifdef CONFIG_RISCV_ISA_F_ONLY
+#define RISCV_ELF_NFPREG (sizeof(struct __riscv_f_ext_state) / sizeof(__u32))
+#define RISCV_ELF_FPREG_SIZE sizeof(__u32)
+#else
+#define RISCV_ELF_NFPREG ELF_NFPREG
+#define RISCV_ELF_FPREG_SIZE sizeof(elf_fpreg_t)
+#endif
+
 static int riscv_fpr_get(struct task_struct *target,
 			 const struct user_regset *regset,
 			 struct membuf to)
 {
-	struct __riscv_d_ext_state *fstate = &target->thread.fstate;
+	typeof(target->thread.fstate) *fstate = &target->thread.fstate;
 
 	if (target == current)
 		fstate_save(current, task_pt_regs(current));
 
-	membuf_write(&to, fstate, offsetof(struct __riscv_d_ext_state, fcsr));
+	membuf_write(&to, fstate, offsetof(typeof(*fstate), fcsr));
 	membuf_store(&to, fstate->fcsr);
+#ifndef CONFIG_RISCV_ISA_F_ONLY
 	return membuf_zero(&to, 4);	// explicitly pad
+#else
+	return 0;
+#endif
 }
 
 static int riscv_fpr_set(struct task_struct *target,
@@ -69,13 +81,13 @@ static int riscv_fpr_set(struct task_struct *target,
 			 const void *kbuf, const void __user *ubuf)
 {
 	int ret;
-	struct __riscv_d_ext_state *fstate = &target->thread.fstate;
+	typeof(target->thread.fstate) *fstate = &target->thread.fstate;
 
 	ret = user_regset_copyin(&pos, &count, &kbuf, &ubuf, fstate, 0,
-				 offsetof(struct __riscv_d_ext_state, fcsr));
+				 offsetof(typeof(*fstate), fcsr));
 	if (!ret) {
 		ret = user_regset_copyin(&pos, &count, &kbuf, &ubuf, fstate, 0,
-					 offsetof(struct __riscv_d_ext_state, fcsr) +
+					 offsetof(typeof(*fstate), fcsr) +
 					 sizeof(fstate->fcsr));
 	}
 
@@ -95,9 +107,9 @@ static const struct user_regset riscv_user_regset[] = {
 #ifdef CONFIG_FPU
 	[REGSET_F] = {
 		.core_note_type = NT_PRFPREG,
-		.n = ELF_NFPREG,
-		.size = sizeof(elf_fpreg_t),
-		.align = sizeof(elf_fpreg_t),
+		.n = RISCV_ELF_NFPREG,
+		.size = RISCV_ELF_FPREG_SIZE,
+		.align = RISCV_ELF_FPREG_SIZE,
 		.regset_get = riscv_fpr_get,
 		.set = riscv_fpr_set,
 	},

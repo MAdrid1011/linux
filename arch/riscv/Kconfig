@@ -475,6 +475,14 @@ config FPU
 
 	  If you don't know what to do here, say Y.
 
+config RISCV_ISA_F_ONLY
+	bool "Support systems with F but without D"
+	depends on 32BIT && FPU
+	help
+	  Enable this for RV32 systems whose floating-point register width is
+	  32 bits. Context switch, signal and ptrace state then use the F extension
+	  layout and the kernel never emits D extension instructions.
+
 endmenu # "Platform type"
 
 menu "Kernel features"

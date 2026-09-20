@@ -38,7 +38,11 @@ static long restore_fp_state(struct pt_regs *regs,
 			     union __riscv_fp_state __user *sc_fpregs)
 {
 	long err;
+#ifdef CONFIG_RISCV_ISA_F_ONLY
+	struct __riscv_f_ext_state __user *state = &sc_fpregs->f;
+#else
 	struct __riscv_d_ext_state __user *state = &sc_fpregs->d;
+#endif
 	size_t i;
 
 	err = __copy_from_user(&current->thread.fstate, state, sizeof(*state));
@@ -65,7 +69,11 @@ static long save_fp_state(struct pt_regs *regs,
 			  union __riscv_fp_state __user *sc_fpregs)
 {
 	long err;
+#ifdef CONFIG_RISCV_ISA_F_ONLY
+	struct __riscv_f_ext_state __user *state = &sc_fpregs->f;
+#else
 	struct __riscv_d_ext_state __user *state = &sc_fpregs->d;
+#endif
 	size_t i;
 
 	fstate_save(current, regs);

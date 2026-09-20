@@ -8,15 +8,31 @@
 %{
 
 #include <assert.h>
+#include <errno.h>
 #include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
 #include "lkc.h"
 #include "parser.tab.h"
 
 #define YY_DECL		static int yylex1(void)
+
+#define YY_INPUT(buf, result, max_size) do { \
+	ssize_t ret; \
+	errno = 0; \
+	while ((ret = read(fileno(yyin), buf, max_size)) < 0) { \
+		if (errno != EINTR) { \
+			YY_FATAL_ERROR("input in flex scanner failed"); \
+			break; \
+		} \
+		errno = 0; \
+		clearerr(yyin); \
+	} \
+	result = (size_t)ret; \
+} while (0)
 
 #define START_STRSIZE	16
 
